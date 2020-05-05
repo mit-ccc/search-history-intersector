@@ -9,3 +9,5 @@ Third-party libraries used (in the vendor/ subdirectory)
 - FileSaver:   https://github.com/eligrey/FileSaver.js/blob/master/dist/FileSaver.min.js.map
 - jszip:  https://stuk.github.io/jszip/
 - datatables:  https://datatables.net/
+
+See https://docs.google.com/presentation/d/1luZS1ZnZdL2Eg3kOX82OQFnDwI5U-VoyJiZlnnjNE54/edit?usp=sharing for some slides about this work.
