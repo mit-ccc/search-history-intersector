@@ -1,6 +1,6 @@
 var MAX_QUERY_DISPLAY_CHARS = 40;
-var HASH_OUTPUT_FILENAME = "search_hashes.out";
-var PLAIN_OUTPUT_FILENAME = "search_queries.tsv";
+var HASH_OUTPUT_FILENAME = "location_hashes.out";
+var PLAIN_OUTPUT_FILENAME = "locations_times.tsv";
 
 // For "intersections", when the user intersects their queries with a friend's
 var intersectHashes = {};
@@ -49,7 +49,7 @@ function parseZipFile(zipFile) {
 function updateLoadingMessageQueries(numQueries, numUniqueQueries, startDate,
                                      endDate) {
   if (numQueries == 0) {
-    $("#loadingMessage").html("Could not find any search history data in the zip file.");
+    $("#loadingMessage").html("Could not find any location history data in the zip file.");
   } else {
     $("#loadingMessage").html(
       "Processed " + numQueries.toString() + " queries (" +
@@ -133,7 +133,7 @@ function processDecompressedFiles(decompressedFiles) {
   }
 
   // create html table from dataSet
-  oTable = $('#search_table').DataTable({
+  oTable = $('#location_table').DataTable({
     "data": dataSet,
     "paging":   true,
     "lengthChange":   false,
@@ -141,11 +141,11 @@ function processDecompressedFiles(decompressedFiles) {
     "iDisplayLength":  50,
     "deferRender": true,
     "oLanguage": { "sSearch": "_INPUT_",
-                   "sInfo": "Showing _START_ to _END_ of _TOTAL_ searches",
-                   "sInfoFiltered": "filtered from _MAX_ total searches",
+                   "sInfo": "Showing _START_ to _END_ of _TOTAL_ locations",
+                   "sInfoFiltered": "filtered from _MAX_ total locations",
                    "sSearchPlaceholder": "Filter by keyword",
                    "sEmptyTable": "No data found",
-                   "sZeroRecords": "No matching searches" },
+                   "sZeroRecords": "No matching locations" },
      "columnDefs": [{ "title": "Location", "targets": 0,
                       "render":  {_: "raw", display: "display", sort: "raw"}},
                     { "title": "Start time", "targets": 1,
@@ -165,12 +165,12 @@ function processDecompressedFiles(decompressedFiles) {
          clearTimeout(redrawTimeout);
        }
        if (intersectHashFilename) {
-         $("#intersectionMessage").html("<b>Restricting to searches that were also found in <i>" + intersectHashFilename + "</i></b>  <button onClick=\"intersectClear();\">Reset and show all</button>");
+         $("#intersectionMessage").html("<b>Restricting to locations that were also found in <i>" + intersectHashFilename + "</i></b>  <button onClick=\"intersectClear();\">Reset and show all</button>");
        }
-       // Search count message
-       var input = $("#search_table_filter").find("input")[0];
+       // Location count message
+       var input = $("#location_table_filter").find("input")[0];
        if (!($(input).val()) && !intersectHashFilename) {
-         $("#searchCountMessage").html("");
+         $("#locationCountMessage").html("");
          $("#downloadPlainButton").text("Download all rows to a .tsv file");
        } else {
          redrawTimeout = setTimeout(function() {
@@ -181,7 +181,7 @@ function processDecompressedFiles(decompressedFiles) {
            });
            var pct = (numQueries > 0) ? 100.0 * numMatchedQueries / numQueries : 0.0;
            pct = Math.round(pct * 100.0) / 100.0;
-           $("#searchCountMessage").html(pct.toString() + "% of your searches matched.");
+           $("#locationCountMessage").html(pct.toString() + "% of your locations matched.");
          }, 500);
          // Put the correct count in the download button
          $("#downloadPlainButton").text("Download these " + oTable.rows({filter: 'applied'}).count() + " rows to a .tsv file");
@@ -214,7 +214,7 @@ function processDecompressedFiles(decompressedFiles) {
 
 function addExtraButtons() {
   // Header stuff
-  $(".fg-toolbar:first").append("<span id=\"searchCountMessage\"><span>");
+  $(".fg-toolbar:first").append("<span id=\"locationCountMessage\"><span>");
 
   // Footer buttons (export file and do intersection)
   $(".fg-toolbar:last").append("<br><br><div id=\"downloadPlainDiv\">");
@@ -222,7 +222,7 @@ function addExtraButtons() {
   $(".fg-toolbar:last").append("</div>");
 
   $(".fg-toolbar:last").append("<div id=\"intersectionDiv\">");
-  $(".fg-toolbar:last").append("<button id=\"downloadHashButton\" onClick=\"downloadHashFileClick()\" title=\"To see the searches you have in common with a friend, click this button to download the hashes to a file, and then send the file to your friend.  The friend should then select 'Intersect with a friend\''s hashes' below.\">Download hashes for all searches to a file</button> ");
+  $(".fg-toolbar:last").append("<button id=\"downloadHashButton\" onClick=\"downloadHashFileClick()\" title=\"To see the locations you have in common with a friend, click this button to download the hashes to a file, and then send the file to your friend.  The friend should then select 'Intersect with a friend\''s hashes' below.\">Download hashes for all locations to a file</button> ");
   $(".fg-toolbar:last").append("<br><input type=\"file\" id=\"intersectFile\" /><button id=\"intersectButton\" onClick=\"intersectClick()\">Intersect with a friend's hashes</button>");
   $(".fg-toolbar:last").append("</div>");
 
@@ -320,14 +320,14 @@ function downloadPlainFileClick() {
   });
   var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
   saveAs(blob, PLAIN_OUTPUT_FILENAME);
-  $("#downloadPlainButton").html("Searches downloaded to \"" + PLAIN_OUTPUT_FILENAME + "\"");
+  $("#downloadPlainButton").html("Locations downloaded to \"" + PLAIN_OUTPUT_FILENAME + "\"");
   $("#downloadPlainButton").prop("disabled",false);
 }
 
 
 $("#file").change(function(event) {
   // TODO(robon): Update loading message
-  //$("#loadingMessage").html("Loading search data...");
+  //$("#loadingMessage").html("Loading location data...");
   var files = event.target.files;
   // requestAnimationFrame ensures status message is painted
 	requestAnimationFrame(() => {
@@ -357,8 +357,4 @@ function intersectClear() {
     intersectHashes = {};
     $("#intersectionMessage").html("");
     oTable.draw();
-}
-
-function linkToGoogle(query, display) {
-    return "<a class=\"resultLink\" target=\"_blank\" href=\"https://www.google.com/search?q=" + encodeURIComponent(query) + "\">" + display + "</a>";
 }
