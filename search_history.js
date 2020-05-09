@@ -8,11 +8,6 @@ var intersectHashFilename = "";
 var intersectHideDataMode = false;
 var currentIntersectPw = "";
 
-// For when "Also show related queries" button has been pressed
-var relatedWordsMode = false;
-var relatedWordsBaseQuery = "";
-var relatedTerms = {};
-
 var numQueries = 0;
 var numKeywords = 0;
 var redrawTimeout = 0;
@@ -174,7 +169,7 @@ function processDecompressedFiles(decompressedFiles) {
        }
        // Search count message
        var input = $("#search_table_filter").find("input")[0];
-       if (!($(input).val()) && !intersectHashFilename && !relatedWordsMode) {
+       if (!($(input).val()) && !intersectHashFilename) {
          $("#searchCountMessage").html("");
          $("#downloadPlainButton").text("Download all rows to a .tsv file");
        } else {
@@ -194,9 +189,8 @@ function processDecompressedFiles(decompressedFiles) {
      }
   });
   addExtraButtons();
-  resetRelatedWords();
 
-  // Register filter for intersection-with-friend and related-words mode
+  // Register filter for intersection-with-friend
   $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
     // Don't show any data if the intersector is typing their password
     if (intersectHideDataMode) return false;
@@ -215,37 +209,11 @@ function processDecompressedFiles(decompressedFiles) {
       }
       return false;
     }
-    // If it's related-words mode, filter out words that aren't related to input
-    if (relatedWordsMode) {
-      var toks = data[0].toLowerCase().split(' ');
-      var matches = false;
-      for (var i=0; i<toks.length; i++) {
-        if (relatedTerms.hasOwnProperty(toks[i])
-            || toks[i].startsWith(relatedWordsBaseQuery)) {
-          matches = true;
-          var strength = relatedTerms[toks[i]];
-          if (!strength) {
-            strength = (toks[i] === relatedWordsBaseQuery) ? CWV_MAX_DISTANCE :
-            CWV_MAX_DISTANCE - 30;   // penalize non-exact match a little
-          } else {
-            strength = CWV_MAX_DISTANCE - strength;
-          }
-          strength = Math.round(strength * 10.0 / CWV_MAX_DISTANCE);  // make it out of 10
-          oTable.cell(dataIndex, 4).data({"raw": strength, "display": strength.toString()});
-          break;
-        }
-      }
-      if (!matches) {
-        return false;
-      }
-    }
-    return true;
   });
 }
 
 function addExtraButtons() {
   // Header stuff
-  $(".fg-toolbar:first").append("<span id=\"filterAddRelatedWordsButton\"><span>");
   $(".fg-toolbar:first").append("<span id=\"searchCountMessage\"><span>");
 
   // Footer buttons (export file and do intersection)
@@ -281,7 +249,7 @@ function promptForPassword(isDownload) {
   $("#hash-password-form").show();
   $("#hash-password").focus();
 
-  form = $("#hash-password-form").find("form").on("submit", function( event ) {
+  form = $("#hash-password-form").find("form").on("submit", function(event) {
     event.preventDefault();
     $("#hash-password-form").hide();
     if (isDownload) {
@@ -317,7 +285,7 @@ function queryToHash(query, pw) {
 function downloadHashFile(pw) {
   $("#downloadHashButton").html("Computing...");
   var text = "";
-  oTable.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+  oTable.rows().every(function(rowIdx, tableLoop, rowLoop) {
     var data = this.data();
     var startDt = new Date(data[1]["raw"]);
     var endDt = new Date(data[2]["raw"]);
@@ -391,40 +359,6 @@ function intersectClear() {
     oTable.draw();
 }
 
-function expandToRelatedWordsClick() {
-    relatedWordsMode = true;
-    $("#filterAddRelatedWordsButton").html("<button onClick=\"resetRelatedWordsClick();\">Reset filter</button>");
-    $("#search_table_filter").prop("disabled", true);
-    var input = $("#search_table_filter").find("input")[0];
-    relatedWordsBaseQuery = $(input).val().toLowerCase();
-    var relatedTermsList = related_words(relatedWordsBaseQuery);
-    relatedTerms = {};
-    for (var i=0; i<relatedTermsList.length; i++) {
-        relatedTerms[relatedTermsList[i][0]] = relatedTermsList[i][1];
-    }
-    $(input).val("");
-    $(input).trigger($.Event("keyup", { keyCode: 13 }));
-    $(input).prop("disabled", true);
-    oTable.column(4).visible(true);
-    oTable.draw();
-    $(input).val("Related to " + relatedWordsBaseQuery);
-    $(oTable.column(4).header()).html("Relatedness to " + relatedWordsBaseQuery + " (out of 10)");
-}
-
 function linkToGoogle(query, display) {
     return "<a class=\"resultLink\" target=\"_blank\" href=\"https://www.google.com/search?q=" + encodeURIComponent(query) + "\">" + display + "</a>";
-}
-
-function resetRelatedWords() {
-    relatedWordsMode = false;
-    $("#filterAddRelatedWordsButton").html("<button onClick=\"expandToRelatedWordsClick();\">Also show related searches</button>");
-    $("#filterAddRelatedWordsButton").hide();
-}
-
-function resetRelatedWordsClick() {
-    resetRelatedWords();
-    oTable.column(4).visible(false);
-    oTable.draw();
-    var input = $("#search_table_filter").find("input")[0];
-    $(input).prop("disabled", false);
 }
