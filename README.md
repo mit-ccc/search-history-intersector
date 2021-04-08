@@ -1,5 +1,5 @@
 This is the code for the Google search history exploration / intersection
-demo hosted at https://prototypes.cortico.ai/search-history/.
+demo hosted at https://dougb5.github.io/search-history-intersector/.
 This is a single-page app and can run locally, without a Web server.
 Just open search_history.html from your browser.
 
